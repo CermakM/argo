@@ -41,7 +41,9 @@ func execResource(action string) error {
 		wfExecutor.AddError(err)
 		return err
 	}
-	resourceNamespace, resourceName, err := wfExecutor.ExecResource(action, common.ExecutorResourceManifestPath)
+	resourceNamespace, resourceName, err := wfExecutor.ExecResource(
+		action, common.ExecutorResourceManifestPath, wfExecutor.Template.Resource.Flags,
+	)
 	if err != nil {
 		wfExecutor.AddError(err)
 		return err

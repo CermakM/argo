@@ -1092,7 +1092,11 @@ type ResourceTemplate struct {
 
 	// FailureCondition is a label selector expression which describes the conditions
 	// of the k8s resource in which the step was considered failed
-	FailureCondition string `json:"failureCondition,omitempty"`
+	FailureCondition string `json:"failureCondition,omitempty" protobuf:"bytes,6,opt,name=failureCondition"`
+
+	// Validate is a flag given to kubectl before submitting a resource
+	// If true, use a schema to validate the input before sending it
+	Validate *bool `json:"validate,omitempty" protobuf:"varint,7,opt,name=validate"`
 }
 
 // GetType returns the type of this template
