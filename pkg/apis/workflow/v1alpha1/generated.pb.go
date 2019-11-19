@@ -3806,6 +3806,15 @@ func (m *ResourceTemplate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Flags) > 0 {
+		for iNdEx := len(m.Flags) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Flags[iNdEx])
+			copy(dAtA[i:], m.Flags[iNdEx])
+			i = encodeVarintGenerated(dAtA, i, uint64(len(m.Flags[iNdEx])))
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
 	i -= len(m.FailureCondition)
 	copy(dAtA[i:], m.FailureCondition)
 	i = encodeVarintGenerated(dAtA, i, uint64(len(m.FailureCondition)))
@@ -6260,6 +6269,12 @@ func (m *ResourceTemplate) Size() (n int) {
 	n += 1 + l + sovGenerated(uint64(l))
 	l = len(m.FailureCondition)
 	n += 1 + l + sovGenerated(uint64(l))
+	if len(m.Flags) > 0 {
+		for _, s := range m.Flags {
+			l = len(s)
+			n += 1 + l + sovGenerated(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -7331,6 +7346,7 @@ func (this *ResourceTemplate) String() string {
 		`SetOwnerReference:` + fmt.Sprintf("%v", this.SetOwnerReference) + `,`,
 		`SuccessCondition:` + fmt.Sprintf("%v", this.SuccessCondition) + `,`,
 		`FailureCondition:` + fmt.Sprintf("%v", this.FailureCondition) + `,`,
+		`Flags:` + fmt.Sprintf("%v", this.Flags) + `,`,
 		`}`,
 	}, "")
 	return s
@@ -14066,6 +14082,38 @@ func (m *ResourceTemplate) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.FailureCondition = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flags", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenerated
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenerated
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Flags = append(m.Flags, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
