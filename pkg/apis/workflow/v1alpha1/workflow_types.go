@@ -1094,9 +1094,12 @@ type ResourceTemplate struct {
 	// of the k8s resource in which the step was considered failed
 	FailureCondition string `json:"failureCondition,omitempty" protobuf:"bytes,6,opt,name=failureCondition"`
 
-	// Validate is a flag given to kubectl before submitting a resource
-	// If true, use a schema to validate the input before sending it
-	Validate *bool `json:"validate,omitempty" protobuf:"varint,7,opt,name=validate"`
+	// Flags is a set of additional options passed to kubectl before submitting a resource
+	// I.e. to disable resource validation:
+	// flags: [
+	// 	"--validate=false"  # disable resource validation
+	// ]
+	Flags []string `json:"flags,omitempty" protobuf:"varint,7,opt,name=flags"`
 }
 
 // GetType returns the type of this template
