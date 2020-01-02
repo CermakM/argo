@@ -554,7 +554,9 @@ message ResourceTemplate {
 
   // Flags is a set of additional options passed to kubectl before submitting a resource
   // I.e. to disable resource validation:
-  // flags: [--validate=false]
+  // flags: [
+  // 	"--validate=false"  # disable resource validation
+  // ]
   repeated string flags = 7;
 }
 

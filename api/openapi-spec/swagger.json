@@ -722,7 +722,7 @@
           "type": "string"
         },
         "flags": {
-          "description": "Flags is a set of additional options passed to kubectl before submitting a resource I.e. to disable resource validation: flags: [--validate=false]",
+          "description": "Flags is a set of additional options passed to kubectl before submitting a resource I.e. to disable resource validation: flags: [\n\t\"--validate=false\"  # disable resource validation\n]",
           "type": "array",
           "items": {
             "type": "string"
