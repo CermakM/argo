@@ -21,11 +21,40 @@ import (
 
 // ExecResource will run kubectl action against a manifest
 func (we *WorkflowExecutor) ExecResource(action string, manifestPath string, flags []string) (string, string, error) {
-	isDelete := action == "delete"
+	args, err := we.getKubectlArguments(action, manifestPath, flags)
+	if err != nil {
+		return "", "", err
+	}
+
+	cmd := exec.Command("kubectl", args...)
+	log.Info(strings.Join(cmd.Args, " "))
+
+	out, err := cmd.Output()
+	if err != nil {
+		exErr := err.(*exec.ExitError)
+		errMsg := strings.TrimSpace(string(exErr.Stderr))
+		return "", "", errors.New(errors.CodeBadRequest, errMsg)
+	}
+	if action == "delete" {
+		return "", "", nil
+	}
+	obj := unstructured.Unstructured{}
+	err = json.Unmarshal(out, &obj)
+	if err != nil {
+		return "", "", err
+	}
+	resourceName := fmt.Sprintf("%s.%s/%s", obj.GroupVersionKind().Kind, obj.GroupVersionKind().Group, obj.GetName())
+	log.Infof("%s/%s", obj.GetNamespace(), resourceName)
+	return obj.GetNamespace(), resourceName, nil
+}
+
+func (we *WorkflowExecutor) getKubectlArguments(action string, manifestPath string, flags []string) ([]string, error) {
 	args := []string{
 		action,
 	}
 	output := "json"
+
+	isDelete := action == "delete"
 	if isDelete {
 		args = append(args, "--ignore-not-found")
 		output = "name"
@@ -44,7 +73,7 @@ func (we *WorkflowExecutor) ExecResource(action string, manifestPath string, fla
 		buff, err := ioutil.ReadFile(manifestPath)
 
 		if err != nil {
-			return "", "", errors.New(errors.CodeBadRequest, err.Error())
+			return []string{}, errors.New(errors.CodeBadRequest, err.Error())
 		}
 
 		args = append(args, string(buff))
@@ -57,25 +86,8 @@ func (we *WorkflowExecutor) ExecResource(action string, manifestPath string, fla
 	if len(flags) != 0 {
 		args = append(args, flags...)
 	}
-	cmd := exec.Command("kubectl", args...)
-	log.Info(strings.Join(cmd.Args, " "))
-	out, err := cmd.Output()
-	if err != nil {
-		exErr := err.(*exec.ExitError)
-		errMsg := strings.TrimSpace(string(exErr.Stderr))
-		return "", "", errors.New(errors.CodeBadRequest, errMsg)
-	}
-	if action == "delete" {
-		return "", "", nil
-	}
-	obj := unstructured.Unstructured{}
-	err = json.Unmarshal(out, &obj)
-	if err != nil {
-		return "", "", err
-	}
-	resourceName := fmt.Sprintf("%s.%s/%s", obj.GroupVersionKind().Kind, obj.GroupVersionKind().Group, obj.GetName())
-	log.Infof("%s/%s", obj.GetNamespace(), resourceName)
-	return obj.GetNamespace(), resourceName, nil
+
+	return args, nil
 }
 
 // gjsonLabels is an implementation of labels.Labels interface
