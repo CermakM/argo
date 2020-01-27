@@ -60,6 +60,11 @@ func (we *WorkflowExecutor) getKubectlArguments(action string, manifestPath stri
 		output = "name"
 	}
 
+	buff, err := ioutil.ReadFile(manifestPath)
+	if err != nil {
+		return []string{}, errors.New(errors.CodeBadRequest, err.Error())
+	}
+
 	if action == "patch" {
 		mergeStrategy := "strategic"
 		if we.Template.Resource.MergeStrategy != "" {
@@ -70,22 +75,22 @@ func (we *WorkflowExecutor) getKubectlArguments(action string, manifestPath stri
 		args = append(args, mergeStrategy)
 
 		args = append(args, "-p")
-		buff, err := ioutil.ReadFile(manifestPath)
-
-		if err != nil {
-			return []string{}, errors.New(errors.CodeBadRequest, err.Error())
-		}
-
 		args = append(args, string(buff))
 	}
 
-	args = append(args, "-f")
-	args = append(args, manifestPath)
-	args = append(args, "-o")
-	args = append(args, output)
 	if len(flags) != 0 {
 		args = append(args, flags...)
 	}
+
+	if len(buff) != 0 {
+		args = append(args, "-f")
+		args = append(args, manifestPath)
+	} else if len(flags) <= 0 {
+		msg := "Must provide at least one of flags or manifest."
+		return []string{}, errors.New(errors.CodeBadRequest, msg)
+	}
+	args = append(args, "-o")
+	args = append(args, output)
 
 	return args, nil
 }
