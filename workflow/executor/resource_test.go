@@ -35,7 +35,7 @@ func TestResourceFlags(t *testing.T) {
 		RuntimeExecutor:    &mockRuntimeExecutor,
 		mainContainerID:    fakeContainerID,
 	}
-	args, err := we.getKubectlArguments("fake", "/fake/manifest", fakeFlags)
+	args, err := we.getKubectlArguments("fake", "../../examples/hello-world.yaml", fakeFlags)
 
 	assert.Nil(t, err)
 	assert.Contains(t, args, fakeFlags[0])
