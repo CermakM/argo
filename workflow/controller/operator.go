@@ -703,7 +703,7 @@ func (woc *wfOperationCtx) podReconciliation() error {
 	// It is now impossible to infer pod status. The only thing we can do at this point is to mark
 	// the node with Error.
 	for nodeID, node := range woc.wf.Status.Nodes {
-		if node.Type != wfv1.NodeTypePod || node.Completed() || node.StartedAt.IsZero() {
+		if node.Type != wfv1.NodeTypePod || node.Completed() || node.StartedAt.IsZero() || node.Pending() {
 			// node is not a pod, it is already complete, or it can be re-run.
 			continue
 		}
@@ -1289,6 +1289,13 @@ func (woc *wfOperationCtx) executeTemplate(nodeName string, orgTmpl wfv1.Templat
 		if err != nil {
 			return woc.markNodeError(retryNodeName, err), err
 		}
+		if lastChildNode != nil && lastChildNode.Pending() && processedTmpl.GetType() == wfv1.TemplateTypeContainer {
+			err = woc.executeContainer(lastChildNode.Name, processedTmpl, boundaryID)
+			if apierr.IsForbidden(err) {
+				return woc.markNodePending(node.Name, err), nil
+			}
+			return lastChildNode, nil
+		}
 		if lastChildNode != nil && !lastChildNode.Completed() {
 			// Last child node is still running.
 			return retryParentNode, nil
@@ -1324,6 +1331,9 @@ func (woc *wfOperationCtx) executeTemplate(nodeName string, orgTmpl wfv1.Templat
 	default:
 		err = errors.Errorf(errors.CodeBadRequest, "Template '%s' missing specification", processedTmpl.Name)
 		return woc.initializeNode(nodeName, wfv1.NodeTypeSkipped, orgTmpl, boundaryID, wfv1.NodeError, err.Error()), err
+	}
+	if apierr.IsForbidden(err) {
+		return woc.markNodePending(node.Name, err), nil
 	}
 	if err != nil {
 		node = woc.markNodeError(node.Name, err)
@@ -1525,6 +1535,13 @@ func (woc *wfOperationCtx) markNodePhase(nodeName string, phase wfv1.NodePhase, 
 func (woc *wfOperationCtx) markNodeError(nodeName string, err error) *wfv1.NodeStatus {
 	woc.log.Errorf("Mark error node %s: %+v", nodeName, err)
 	return woc.markNodePhase(nodeName, wfv1.NodeError, err.Error())
+}
+
+// markNodePending is a convenience method to mark a node and set the message from the error
+func (woc *wfOperationCtx) markNodePending(nodeName string, err error) *wfv1.NodeStatus {
+	woc.log.Infof("Mark node %s as Pending, due to: %+v", nodeName, err)
+	node := woc.getNodeByName(nodeName)
+	return woc.markNodePhase(nodeName, wfv1.NodePending, fmt.Sprintf("Pending %s", time.Since(node.StartedAt.Time)))
 }
 
 // checkParallelism checks if the given template is able to be executed, considering the current active pods and workflow/template parallelism

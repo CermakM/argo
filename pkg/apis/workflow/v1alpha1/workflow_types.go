@@ -930,14 +930,14 @@ func (ws *WorkflowStatus) Successful() bool {
 	return ws.Phase == NodeSucceeded
 }
 
-// Failed return whether or not the workflow has failed
-func (ws *WorkflowStatus) Failed() bool {
-	return ws.Phase == NodeFailed
-}
-
-// Remove returns whether or not the node has completed execution
+// Completed returns whether or not the node has completed execution
 func (n NodeStatus) Completed() bool {
 	return isCompletedPhase(n.Phase) || n.IsDaemoned() && n.Phase != NodePending
+}
+
+// Pending returns whether or not the node has completed execution
+func (n NodeStatus) Pending() bool {
+	return n.Phase == NodePending
 }
 
 // IsDaemoned returns whether or not the node is deamoned
