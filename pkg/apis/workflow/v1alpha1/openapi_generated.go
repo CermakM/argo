@@ -1377,6 +1377,20 @@ func schema_pkg_apis_workflow_v1alpha1_ResourceTemplate(ref common.ReferenceCall
 							Format:      "",
 						},
 					},
+					"flags": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Flags is a set of additional options passed to kubectl before submitting a resource I.e. to disable resource validation: flags: [\n\t\"--validate=false\"  # disable resource validation\n]",
+							Type:        []string{"array"},
+							Items: &spec.SchemaOrArray{
+								Schema: &spec.Schema{
+									SchemaProps: spec.SchemaProps{
+										Type:   []string{"string"},
+										Format: "",
+									},
+								},
+							},
+						},
+					},
 				},
 				Required: []string{"action", "manifest"},
 			},
